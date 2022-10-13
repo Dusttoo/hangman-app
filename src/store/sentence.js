@@ -12,12 +12,12 @@ const loadHint = (hint) => ({
 })
 
 export const getWord = () => async (dispatch) => {
-  console.log('env: ', process.env.WORDS_API_KEY)
+  console.log('env: ', process.env.REACT_APP_WORDS_API_KEY)
 
   const options = {
     method: 'GET',
     headers: {
-      'X-RapidAPI-Key': `2d7aad3ea4msh35f5a51cb85a595p1ca27cjsnb1506e12391c`,
+      'X-RapidAPI-Key': `${process.env.REACT_APP_WORDS_API_KEY}`,
       'X-RapidAPI-Host': 'wordsapiv1.p.rapidapi.com'
     }
   };
