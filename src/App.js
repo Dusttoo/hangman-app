@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import { useSelector, useDispatch } from 'react-redux'
 import './App.css';
 import Header from './components/Header';
 import Figure from './components/Figure';
@@ -7,23 +8,31 @@ import Word from './components/Word';
 import Popup from './components/Popup';
 import Notification from './components/Notification'
 import { showNotification as show } from './helpers/helpers';
-
-const words = ['application', 'programming', 'interface', 'wizard'];
-
-let selectedWord = words[Math.floor(Math.random() * words.length)];
-
-
+import { getWord } from './store/sentence';
 function App() {
+  let selectedWord = useSelector((state) => state.word.word)
+  const hint = useSelector((state) => state.word.hint)
+  const dispatch = useDispatch()
   const [playable, setPlayable] = useState(true)
   const [correctLetters, setCorrectLetters] = useState([])
   const [wrongLetters, setWrongLetters] = useState([])
   const [showNotification, setShowNotification] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+  const [revealHint, setRevealHint] = useState(false)
+  // console.log(selectedWord)
 
   useEffect(() => {
+    dispatch(getWord())
+    setLoaded(true)
+  }, [])
+
+  useEffect(() => {
+    if(!loaded) return
     const handleKeyPress = event => {
       const {key, keyCode} = event;
-        if (playable && keyCode >= 65 && keyCode <= 90) {
+        if (playable && keyCode >= 65 && keyCode <= 90 || keyCode === 32) {
           const letter = key.toLowerCase();
+
           if (selectedWord.includes(letter)) {
             if (!correctLetters.includes(letter)) {
               setCorrectLetters(currentLetters => [...currentLetters, letter])
@@ -41,26 +50,34 @@ function App() {
     }
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [correctLetters, wrongLetters, playable])
+  }, [selectedWord, correctLetters, wrongLetters, playable, loaded])
 
-  function playAgain() {
-    console.log('play again')
+  const playAgain = async () => {
+    setLoaded(false)
     setPlayable(true);
     setCorrectLetters([])
     setWrongLetters([])
-    selectedWord = words[Math.floor(Math.random() * words.length)]
+    dispatch(getWord())
+    setRevealHint(false)
+    setLoaded(true)
   }
   return (
     <>
-      <Header/>
-      <div className='game-container'>
-        <Figure wrongLetters={wrongLetters}/>
-        <WrongLetters wrongLetters={wrongLetters}/>
-        <Word selectedWord={selectedWord} correctLetters={correctLetters}/>
-      </div>
-        <Popup correctLetters={correctLetters} wrongLetters={wrongLetters} selectedWord={selectedWord} 
-        setPlayable={setPlayable} playAgain={playAgain}/>
-        <Notification showNotification={showNotification}/>
+    {selectedWord && loaded ?
+    <>
+          <Header hint={hint} revealHint={revealHint} setRevealHint={setRevealHint}/>
+          <div className='game-container'>
+            <Figure wrongLetters={wrongLetters}/>
+            <WrongLetters wrongLetters={wrongLetters}/>
+            <Word selectedWord={selectedWord} correctLetters={correctLetters}/>
+          </div>
+            <Popup correctLetters={correctLetters} wrongLetters={wrongLetters} selectedWord={selectedWord} 
+            setPlayable={setPlayable} playAgain={playAgain}/>
+            <Notification showNotification={showNotification}/>
+    </> :
+    <h1>Fetching your word...</h1>
+  }
+
     </>
   );
 }

@@ -1,26 +1,47 @@
 const LOAD_WORD = 'sentence/loadWord';
+const LOAD_HINT = 'sentence/loadHint'
 
 const loadWord = (word) => ({
     type: LOAD_WORD,
     word
 })
 
+const loadHint = (hint) => ({
+  type: LOAD_HINT,
+  hint
+})
+
 export const getWord = () => async (dispatch) => {
-    const response = await fetch('https://random-word-api.herokuapp.com/word');
+  console.log('env: ', process.env.WORDS_API_KEY)
+
+  const options = {
+    method: 'GET',
+    headers: {
+      'X-RapidAPI-Key': `2d7aad3ea4msh35f5a51cb85a595p1ca27cjsnb1506e12391c`,
+      'X-RapidAPI-Host': 'wordsapiv1.p.rapidapi.com'
+    }
+  };
+    const response = await fetch('https://wordsapiv1.p.rapidapi.com/words/?random=true', options)
     const word = await response.json();
-    dispatch(loadWord(word))
+    console.log('results', word.results[0].definition)
+    dispatch(loadWord(word.word))
+    dispatch(loadHint(word.results[0].definition))
+    return word.word
 }
 
 const initialState = {};
 
 const wordReducer = (state = initialState, action) => {
-    switch(action.type) {
+  console.log(action)  
+  switch(action.type) {
         case LOAD_WORD:
             const newState = { ...state };
-            action.word.forEach(word => {
-                newState[word.id] = word;
-            });
+            newState['word'] = action.word;
             return newState
+        case LOAD_HINT:
+          const hintState = { ...state };
+          hintState['hint'] = action.hint;
+          return hintState
         default:
             return state
     }
